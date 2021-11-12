@@ -1,5 +1,5 @@
 import time
-
+import matplotlib.pyplot as plt
 import serial
 
 
@@ -23,57 +23,46 @@ def terminator(some_string):
     return some_string
 
 
-def invalid_list():
-    return ["Invalid", "Invalid", "Invalid", "Invalid"]
-
-
-serialcom = serial.Serial("COM14", 9600)
-serialcom.timeout = 1
-var_list = ["Set Point", "P", "I", "D"]
-
-
-def pretty_text(out_list):
-    print("-" * 20 + "\n")
-    print(
-        f"Set Point: {out_list[0]}\
-    \nP: {out_list[1]} | I: {out_list[2]} | D: {out_list[3]}\n"
-    )
-    print("-" * 20)
-
+serialcom = serial.Serial("COM7", 9600)
+serialcom.timeout = 0.5
 
 print(
     "\n\nYou are using a P.I.D controller!!\
     \n\nNote:\
-    \nSet Point: [Numeric Input]\
-    \nP: [Numeric Input]\
-    \nI: [Numeric Input]\
-    \nD: [Numeric Input]\n"
+    \nPWM: [Numeric Input]\n"
 )
 print("-" * 20)
-
+adc_list = []
 while True:
-    out_list = []
-    done = False
-    for item in var_list:
-        i = pic_input(item)
+    counter = 0
+    done=False
+    i = pic_input("PWM")
+    if i == "done":
+        print("bye!")
+        break
+    i, some_bool = validate(i)
+
+    while some_bool == False:
+        i,some_bool = pic_input("PWM")
         if i == "done":
             print("bye!")
-            done = True
+            done=True
             break
-
-        i, some_bool = validate(i)
-
-        if some_bool == False:
-            break
-        out_list.append(i)
-
-    if done:
+    if done==True:
         break
-    pretty_text(out_list)
 
-    for item in out_list:
-        item = terminator(item)
-        serialcom.write(item.encode())
-        time.sleep(0.5)
-        print(serialcom.readline().decode("ascii"))
+    i= terminator(i)
+    serialcom.write(i.encode())
+    time.sleep(0.1)
+    while counter<20:
+        adc = serialcom.readline().decode("ascii")
+        print(adc)
+        adc_list.append(adc)
+        counter=counter+1
+
+adc_list = [int(x[:-1]) for x in adc_list if x != ""]
+print(adc_list)
+plt.plot(adc_list)
+plt.ylabel('ADC readings')
+plt.show()
 serialcom.close()

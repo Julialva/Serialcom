@@ -9,7 +9,7 @@ int read_input(char* str){
     unsigned char temp;
     int i = 0;
     int index = 0;
-    char buffer[4];
+    char buffer[4]="";
     while (i < 4){
     if (EUSART_is_rx_ready())
     {
@@ -38,52 +38,38 @@ int read_input(char* str){
         return 0;
         //return buffer;
                 }
+int count = 0;
+char s[4];
+int num;
+int adc;
 void main(void)
 {
     // initialize the device
     SYSTEM_Initialize();
+    int count = 0;
+    LADO1_SetHigh();
+    LADO2_SetLow();
     while (1)
     {
-    char sp[4];
-    char f_kp[4];
-    char f_ki[4];
-    char f_kd[4];
-    
-    int i=0;
-    while (i<5){
-    switch(i){
-        case 1: {
-            read_input(sp);
-            puts(sp);
+        
+    read_input(s);
+    //puts(s);
+    __delay_ms(1000);
+    num = atoi(s);
+    //printf("%i\n",num);
+    //loads pwm value to motor
+    PWM3_LoadDutyValue(num);
+    count = 0;
+    //printf("%i\n",num);
+    // Reads adc 100 times than expects next input
+    while (count <=20){       
+            ADC_SelectChannel(TACO);
+            ADC_StartConversion();
+            adc = ADC_GetConversionResult();
+            printf("%i\n",adc);
             __delay_ms(200);
-            //int spi = atoi(sp);
-        }
-        case 2:{
-            read_input(f_kp);
-            puts(f_kp);
-            __delay_ms(200);
-            //int f_kpi = atoi(f_kp);
-        }
-        case 3:{
-            read_input(f_ki);
-            puts(f_ki);
-            __delay_ms(200);
-            //int f_kii = atoi(f_ki);
-        }
-        case 4:{
-            read_input(f_kd);
-            puts(f_kd);
-            __delay_ms(200);
-            //int f_kdi = atoi(f_kd);
-        }
-        case 5:{
-            printf("Run PID");
-            __delay_ms(200);
-        }
-    }
-    i++;
-    }
+            count++;
+    }    
     }
 }
-    // Add your application code
     
